@@ -1,0 +1,35 @@
+#
+# Production server with UWSGI configured to run on port 8080
+
+# a sample of current db services
+db:
+  # Note you cannot scale if you use conteiner_name
+  container_name: catalogue-db
+  image: kartoza/postgis:9.4-2.1
+  volumes:
+    #- ./pg/postgres_data:/var/lib/postgresql
+    - ./backups:/backups
+  environment:
+    - USERNAME=docker
+    - PASS=docker
+  restart: on-failure:5
+  ports:
+    - "5432:5432"
+
+# add this service definition to the current system
+pycsw:
+  build: docker-pycsw
+  container_name: catalogue-pycsw
+  hostname: pycsw
+  environment:
+    - DATABASE_NAME=gis
+    - DATABASE_USERNAME=docker
+    - DATABASE_PASSWORD=docker
+    - DATABASE_HOST=db
+  volumes:
+    - ./docker-pycsw/default.cfg:/etc/pycsw/default.cfg
+    - ./pycsw:/home/pycsw
+  links:
+    - db:db
+  ports:
+    - "8000:8000"
